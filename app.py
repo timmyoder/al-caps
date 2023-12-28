@@ -36,15 +36,15 @@ def word_bag(words=survey_data):
 
     for index, row in words.iterrows():
         name = row['Name']
-        cap_1 = row['cap_1'].replace(' ', "_")
-        cap_2 = row['cap_2'].replace(' ', "_")
-        cap_3 = row['cap_3'].replace(' ', "_")
-        cap_4 = row['cap_4'].replace(' ', "_")
-        cap_5 = row['cap_5'].replace(' ', "_")
+        cap_1 = row['cap_1']
+        cap_2 = row['cap_2']
+        cap_3 = row['cap_3']
+        cap_4 = row['cap_4']
+        cap_5 = row['cap_5']
         word_list[name] = [cap_1, cap_2, cap_3]
-        if cap_4 != "_":
+        if cap_4 != " ":
             word_list[name].append(cap_4)
-        if cap_5 != "_":
+        if cap_5 != " ":
             word_list[name].append(cap_5)
 
     big_list = []
@@ -202,12 +202,17 @@ def update_map(social, vaca, night_owl, car, pastime, beverage, location):
     if location != NOT_ON_KEYWORD:
         survey_update = survey_update[survey_update['location'] == location]
 
+    if not survey_update.empty:
+        filtered_staff = survey_update['Name'].to_list()
+    else:
+        filtered_staff = ['No team members matching that combo...', ]
+
     word_list = word_bag(survey_update)
 
     return (create_figure(survey_update),
-            [html.P(item) for item in survey_update['Name'].to_list()],
+            [html.P(item) for item in filtered_staff],
             word_list)
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)
