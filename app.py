@@ -14,7 +14,7 @@ from sensitive_config import MAPBOX_TOKEN
 
 px.set_mapbox_access_token(MAPBOX_TOKEN)
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = ['https://codepen.io/chriddyp/pen/dZVMbK.css']
 PNNL_LOGO_PATH = 'assets/PNNL_vertical_logo.png'
 
 app = Dash(__name__, external_stylesheets=external_stylesheets)
@@ -71,9 +71,8 @@ def create_figure(survey_data):
                                        'cap_5': True,
                                        'lat': False,
                                        'long': False},
-                                   height=600,
-                                   width=1000,
-                                   # title='A&L Capabilities and Home Bases'
+                                   # height=600,
+                                   # width=1000,
                                    )
     map_figure.update_traces(cluster=dict(enabled=True,
                                           maxzoom=14,
@@ -89,7 +88,9 @@ def create_figure(survey_data):
                              '<br>%{customdata[4]}' +
                              '<br>%{customdata[5]}'
                              )
-    map_figure.update_layout(autosize=True, )
+    map_figure.update_layout(autosize=True,
+                             margin=dict(t=0, b=0, l=0, r=0)
+                             )
     map_figure.update_layout(mapbox=dict(
         center=go.layout.mapbox.Center(
             lat=40,
@@ -111,11 +112,14 @@ app.layout = html.Div(children=[
         dbc.Col([
             dbc.Row([html.H3('A&L Capabilities and Home Bases'),
                      dcc.Graph(figure=initial_fig, id='map-figure'), ],
-                    style={
-                        'width': '50%',
-                        # 'padding': 10,
-                        'flex': 1
-                    }), ]),
+                    ), ],
+            style={
+                'width': '45vw',
+                'height': '30vh',
+                'margin-right': '20px',
+                # 'padding': 10,
+                # 'flex': 1
+            }),
 
         # radio buttons
         dbc.Col([
@@ -140,13 +144,17 @@ app.layout = html.Div(children=[
             html.H6('Team Members'),
             html.Div(id='my-list')
         ],
-            style={'margin-top': '15px', 'margin-right': '20px'}),
+            style={
+                # 'margin-top': '15px',
+                # 'margin-right': '20px',
+                'width': '15vw'
+            }),
         dbc.Col([
             html.H3('Capabilities'),
             DashWordcloud(
                 id='wordcloud',
                 list=word_bag(),
-                width=600, height=400,
+                width=600, height=300,
                 gridSize=25,
                 color='#6371f2',
                 backgroundColor='#ffffff',
@@ -158,11 +166,15 @@ app.layout = html.Div(children=[
             )
         ],
             style={
-                'padding': 10,
-                'flex': 1
+                # 'padding': 10,
+                # 'flex': 1,
+                'width': '35vw'
             }),
     ],
-        style={'display': 'flex', 'flexDirection': 'row'}
+        style={
+            'display': 'flex',
+            'flexDirection': 'row'
+        }
     ),
     html.Br(),
     html.Br(),
