@@ -3,3 +3,5 @@ dash
 plotly
 pandas
 numpy
+dash_bootstrap_components
+dash-holoniq-wordcloud

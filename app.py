@@ -1,9 +1,14 @@
+from collections import Counter
+
 import pandas as pd
 
 from dash import Dash, dcc, html, Input, Output, callback
 
 import plotly.express as px
 import plotly.graph_objects as go
+import dash_bootstrap_components as dbc
+
+from dash_holoniq_wordcloud import DashWordcloud
 
 from sensitive_config import MAPBOX_TOKEN
 
@@ -21,6 +26,38 @@ body_font = 'Montserrat, sans-serif'
 
 survey_file = 'survey.csv'
 
+NOT_ON_KEYWORD = 'No Filter'
+
+survey_data = pd.read_csv(survey_file)
+
+
+def word_bag(words=survey_data):
+    word_list = {}
+
+    for index, row in words.iterrows():
+        name = row['Name']
+        cap_1 = row['cap_1'].replace(' ', "_")
+        cap_2 = row['cap_2'].replace(' ', "_")
+        cap_3 = row['cap_3'].replace(' ', "_")
+        cap_4 = row['cap_4'].replace(' ', "_")
+        cap_5 = row['cap_5'].replace(' ', "_")
+        word_list[name] = [cap_1, cap_2, cap_3]
+        if cap_4 != "_":
+            word_list[name].append(cap_4)
+        if cap_5 != "_":
+            word_list[name].append(cap_5)
+
+    big_list = []
+    for thing in word_list.keys():
+        for item_ in word_list[thing]:
+            big_list.append(item_)
+
+    counted_words = Counter(big_list)
+    word_cloud_list = []
+    for word in counted_words.keys():
+        word_cloud_list.append([word, counted_words[word] * 10])
+    return word_cloud_list
+
 
 def create_figure(survey_data):
     map_figure = px.scatter_mapbox(survey_data, lat="lat", lon="long",
@@ -35,7 +72,8 @@ def create_figure(survey_data):
                                        'lat': False,
                                        'long': False},
                                    height=600,
-                                   width=1000
+                                   width=1000,
+                                   # title='A&L Capabilities and Home Bases'
                                    )
     map_figure.update_traces(cluster=dict(enabled=True,
                                           maxzoom=14,
@@ -51,7 +89,7 @@ def create_figure(survey_data):
                              '<br>%{customdata[4]}' +
                              '<br>%{customdata[5]}'
                              )
-    map_figure.update_layout(autosize=True,)
+    map_figure.update_layout(autosize=True, )
     map_figure.update_layout(mapbox=dict(
         center=go.layout.mapbox.Center(
             lat=40,
@@ -65,33 +103,67 @@ def create_figure(survey_data):
 survey = pd.read_csv(survey_file)
 initial_fig = create_figure(survey_data=survey)
 
-app.layout = html.Div([
-    html.H1("Analytics & Learning Team", style={'font-family': header_font}),
-    html.Div([
-        html.Div(children=[
-            dcc.RadioItems(['Extrovert', 'Introvert', 'Either'], 'Either',
-                           inline=True, id='social'),
-            dcc.RadioItems(['Vacation', 'Staycation', 'Either'], 'Either',
-                           inline=True, id='vaca'),
-            dcc.RadioItems(['Morning', 'Night', 'Either'], 'Either',
-                           inline=True, id='night-owl'),
-            dcc.RadioItems(['Driver', 'Passenger', 'Either'], 'Either',
-                           inline=True, id='car'),
-            dcc.RadioItems(['Book', 'Movie', 'Either'], 'Either',
-                           inline=True, id='pastime'),
-            dcc.RadioItems(['Tea', 'Coffee', 'Either'], 'Either',
-                           inline=True, id='beverage'),
-            dcc.RadioItems(['City', 'Countryside', 'Either'], 'Either',
-                           inline=True, id='location'), ],
-            style={'padding': 10, 'flex': 1}),
-        html.Div(children=[
-            dcc.Graph(figure=initial_fig, id='map-figure'), ],
-            style={'padding': 10, 'flex': 1}),
+app.layout = html.Div(children=[
+    dbc.Row([
+        html.H1("Analytics & Learning Team", style={'font-family': header_font}), ]),
+    # mapbox
+    dbc.Row([
+        dbc.Col([
+            dbc.Row([html.H3('A&L Capabilities and Home Bases'),
+                     dcc.Graph(figure=initial_fig, id='map-figure'), ],
+                    style={
+                        'width': '50%',
+                        # 'padding': 10,
+                        'flex': 1
+                    }), ]),
 
-    ], style={'display': 'flex', 'flexDirection': 'row'}
+        # radio buttons
+        dbc.Col([
+            html.Br(),
+            html.Br(),
+            html.Label(html.B('This or That - A&L Team Preferences')),
+            dcc.RadioItems(['Extrovert', 'Introvert', NOT_ON_KEYWORD], NOT_ON_KEYWORD,
+                           inline=True, id='social'),
+            dcc.RadioItems(['Vacation', 'Staycation', NOT_ON_KEYWORD], NOT_ON_KEYWORD,
+                           inline=True, id='vaca'),
+            dcc.RadioItems(['Morning', 'Night', NOT_ON_KEYWORD], NOT_ON_KEYWORD,
+                           inline=True, id='night-owl'),
+            dcc.RadioItems(['Driver', 'Passenger', NOT_ON_KEYWORD], NOT_ON_KEYWORD,
+                           inline=True, id='car'),
+            dcc.RadioItems(['Book', 'Movie', NOT_ON_KEYWORD], NOT_ON_KEYWORD,
+                           inline=True, id='pastime'),
+            dcc.RadioItems(['Tea', 'Coffee', NOT_ON_KEYWORD], NOT_ON_KEYWORD,
+                           inline=True, id='beverage'),
+            dcc.RadioItems(['City', 'Countryside', NOT_ON_KEYWORD], NOT_ON_KEYWORD,
+                           inline=True, id='location'),
+            html.Br(),
+            html.H6('Team Members'),
+            html.Div(id='my-list')
+        ],
+            style={'margin-top': '15px', 'margin-right': '20px'}),
+        dbc.Col([
+            html.H3('Capabilities'),
+            DashWordcloud(
+                id='wordcloud',
+                list=word_bag(),
+                width=600, height=400,
+                gridSize=25,
+                color='#6371f2',
+                backgroundColor='#ffffff',
+                shuffle=False,
+                rotateRatio=0.3,
+                shrinkToFit=True,
+                shape='circle',
+                hover=True
+            )
+        ],
+            style={
+                'padding': 10,
+                'flex': 1
+            }),
+    ],
+        style={'display': 'flex', 'flexDirection': 'row'}
     ),
-    html.Br(),
-    html.Br(),
     html.Br(),
     html.Br(),
     html.Div(html.A(html.Img(src=PNNL_LOGO_PATH,
@@ -100,8 +172,11 @@ app.layout = html.Div([
                     href='https://www.pnnl.gov/'),
              style={'textAlign': 'center'})])
 
+
 @callback(
     Output('map-figure', 'figure'),
+    Output('my-list', 'children'),
+    Output('wordcloud', 'list'),
     Input('social', 'value'),
     Input('vaca', 'value'),
     Input('night-owl', 'value'),
@@ -112,22 +187,26 @@ app.layout = html.Div([
 def update_map(social, vaca, night_owl, car, pastime, beverage, location):
     survey_update = pd.read_csv(survey_file)
 
-    if social != 'Either':
+    if social != NOT_ON_KEYWORD:
         survey_update = survey_update[survey_update['social'] == social]
-    if vaca != 'Either':
+    if vaca != NOT_ON_KEYWORD:
         survey_update = survey_update[survey_update['vaca'] == vaca]
-    if night_owl != 'Either':
+    if night_owl != NOT_ON_KEYWORD:
         survey_update = survey_update[survey_update['night-owl'] == night_owl]
-    if car != 'Either':
+    if car != NOT_ON_KEYWORD:
         survey_update = survey_update[survey_update['car'] == car]
-    if pastime != 'Either':
+    if pastime != NOT_ON_KEYWORD:
         survey_update = survey_update[survey_update['pastime'] == pastime]
-    if beverage != 'Either':
+    if beverage != NOT_ON_KEYWORD:
         survey_update = survey_update[survey_update['beverage'] == beverage]
-    if location != 'Either':
+    if location != NOT_ON_KEYWORD:
         survey_update = survey_update[survey_update['location'] == location]
 
-    return create_figure(survey_update)
+    word_list = word_bag(survey_update)
+
+    return (create_figure(survey_update),
+            [html.P(item) for item in survey_update['Name'].to_list()],
+            word_list)
 
 
 if __name__ == '__main__':
