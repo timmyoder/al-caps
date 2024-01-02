@@ -14,7 +14,7 @@ from sensitive_config import MAPBOX_TOKEN
 
 px.set_mapbox_access_token(MAPBOX_TOKEN)
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/dZVMbK.css']
+external_stylesheets = None
 PNNL_LOGO_PATH = 'assets/PNNL_vertical_logo.png'
 
 app = Dash(__name__, external_stylesheets=external_stylesheets)
@@ -96,7 +96,7 @@ def create_figure(survey_data):
             lat=40,
             lon=-95
         ),
-        zoom=3
+        zoom=2.5
     ))
     return map_figure
 
@@ -104,85 +104,107 @@ def create_figure(survey_data):
 survey = pd.read_csv(survey_file)
 initial_fig = create_figure(survey_data=survey)
 
-app.layout = html.Div(children=[
-    dbc.Row([
-        html.H1("Analytics & Learning Team", style={'font-family': header_font}), ]),
-    # mapbox
-    dbc.Row([
-        dbc.Col([
-            dbc.Row([html.H3('A&L Capabilities and Home Bases'),
-                     dcc.Graph(figure=initial_fig, id='map-figure'), ],
-                    ), ],
-            style={
-                'width': '45vw',
-                'height': '30vh',
-                'margin-right': '20px',
-                # 'padding': 10,
-                # 'flex': 1
-            }),
-
-        # radio buttons
-        dbc.Col([
-            html.Br(),
-            html.Br(),
-            html.Label(html.B('This or That - A&L Team Preferences')),
-            dcc.RadioItems(['Extrovert', 'Introvert', NOT_ON_KEYWORD], NOT_ON_KEYWORD,
-                           inline=True, id='social'),
-            dcc.RadioItems(['Vacation', 'Staycation', NOT_ON_KEYWORD], NOT_ON_KEYWORD,
-                           inline=True, id='vaca'),
-            dcc.RadioItems(['Morning', 'Night', NOT_ON_KEYWORD], NOT_ON_KEYWORD,
-                           inline=True, id='night-owl'),
-            dcc.RadioItems(['Driver', 'Passenger', NOT_ON_KEYWORD], NOT_ON_KEYWORD,
-                           inline=True, id='car'),
-            dcc.RadioItems(['Book', 'Movie', NOT_ON_KEYWORD], NOT_ON_KEYWORD,
-                           inline=True, id='pastime'),
-            dcc.RadioItems(['Tea', 'Coffee', NOT_ON_KEYWORD], NOT_ON_KEYWORD,
-                           inline=True, id='beverage'),
-            dcc.RadioItems(['City', 'Countryside', NOT_ON_KEYWORD], NOT_ON_KEYWORD,
-                           inline=True, id='location'),
-            html.Br(),
-            html.H6('Team Members'),
-            html.Div(id='my-list')
-        ],
-            style={
-                # 'margin-top': '15px',
-                # 'margin-right': '20px',
-                'width': '15vw'
-            }),
-        dbc.Col([
-            html.H3('Capabilities'),
-            DashWordcloud(
-                id='wordcloud',
-                list=word_bag(),
-                width=600, height=300,
-                gridSize=25,
-                color='#6371f2',
-                backgroundColor='#ffffff',
-                shuffle=False,
-                rotateRatio=0.3,
-                shrinkToFit=True,
-                shape='circle',
-                hover=True
-            )
-        ],
-            style={
-                # 'padding': 10,
-                # 'flex': 1,
-                'width': '35vw'
-            }),
-    ],
-        style={
-            'display': 'flex',
-            'flexDirection': 'row'
-        }
+radio_buttons = dbc.Card(
+    html.Div(
+        [dbc.RadioItems(['Extrovert', 'Introvert', NOT_ON_KEYWORD],
+                        NOT_ON_KEYWORD, inline=True, id='social',
+                        className="btn-group",
+                        inputClassName="btn-check",
+                        labelClassName="btn btn-outline-primary",
+                        labelCheckedClassName="active",
+                        ),
+         html.Br(),
+         dbc.RadioItems(['Vacation', 'Staycation', NOT_ON_KEYWORD],
+                        NOT_ON_KEYWORD, inline=True, id='vaca',
+                        className="btn-group",
+                        inputClassName="btn-check",
+                        labelClassName="btn btn-outline-primary",
+                        labelCheckedClassName="active",
+                        ),
+         html.Br(),
+         dbc.RadioItems(['Morning', 'Night', NOT_ON_KEYWORD],
+                        NOT_ON_KEYWORD, inline=True, id='night-owl',
+                        className="btn-group",
+                        inputClassName="btn-check",
+                        labelClassName="btn btn-outline-primary",
+                        labelCheckedClassName="active",
+                        ),
+         html.Br(),
+         dbc.RadioItems(['Driver', 'Passenger', NOT_ON_KEYWORD],
+                        NOT_ON_KEYWORD, inline=True, id='car',
+                        className="btn-group",
+                        inputClassName="btn-check",
+                        labelClassName="btn btn-outline-primary",
+                        labelCheckedClassName="active",
+                        ),
+         html.Br(),
+         dbc.RadioItems(['Book', 'Movie', NOT_ON_KEYWORD],
+                        NOT_ON_KEYWORD, inline=True, id='pastime',
+                        className="btn-group",
+                        inputClassName="btn-check",
+                        labelClassName="btn btn-outline-primary",
+                        labelCheckedClassName="active",
+                        ),
+         html.Br(),
+         dbc.RadioItems(['Tea', 'Coffee', NOT_ON_KEYWORD],
+                        NOT_ON_KEYWORD, inline=True, id='beverage',
+                        className="btn-group",
+                        inputClassName="btn-check",
+                        labelClassName="btn btn-outline-primary",
+                        labelCheckedClassName="active",
+                        ),
+         html.Br(),
+         dbc.RadioItems(['City', 'Countryside', NOT_ON_KEYWORD],
+                        NOT_ON_KEYWORD, inline=True, id='location',
+                        className="btn-group",
+                        inputClassName="btn-check",
+                        labelClassName="btn btn-outline-primary",
+                        labelCheckedClassName="active",
+                        ),
+         ],
+        className="radio-group",
     ),
+    body=True
+)
+
+app.layout = dbc.Container([
+    html.H1("Analytics & Learning Team", style={'font-family': header_font}),
     html.Br(),
-    html.Br(),
-    html.Div(html.A(html.Img(src=PNNL_LOGO_PATH,
-                             style={'height': '10%', 'width': '10%',
-                                    'display': 'inline-block', 'margin': 'auto'}),
-                    href='https://www.pnnl.gov/'),
-             style={'textAlign': 'center'})])
+    dbc.Row([
+        dbc.Col([html.H6('Team Members'),
+                 html.Div(id='my-list')],
+                width=2),
+        # mapbox
+        dbc.Col([
+            html.H3("A&L Capabilities and Home Bases",
+                    style={'font-family': header_font,
+                           'textAlign': 'center'}),
+            dcc.Graph(figure=initial_fig, id='map-figure'),
+            html.Br(),
+            html.Br(),
+            html.Br(),
+        ],
+            width=6),
+        # radio buttons
+        dbc.Col([html.H6('This or That - A&L Team Preferences Filters'),
+                 radio_buttons],
+                width=4)
+    ]),
+    dbc.Row(
+        # wordcloud
+        dbc.Col([DashWordcloud(id='wordcloud',
+                               list=word_bag(),
+                               width=600, height=300,
+                               gridSize=25,
+                               color='#6371f2',
+                               backgroundColor='#ffffff',
+                               shuffle=False,
+                               rotateRatio=0.3,
+                               shrinkToFit=True,
+                               shape='circle',
+                               hover=True)],
+                width={'size': 6, "offset": 2}), ),
+])
 
 
 @callback(
@@ -222,7 +244,7 @@ def update_map(social, vaca, night_owl, car, pastime, beverage, location):
     word_list = word_bag(survey_update)
 
     return (create_figure(survey_update),
-            [html.P(item) for item in filtered_staff],
+            dbc.ListGroup([dbc.ListGroupItem(item) for item in filtered_staff]),
             word_list)
 
 
